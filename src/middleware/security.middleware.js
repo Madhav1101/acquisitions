@@ -29,7 +29,13 @@ const securityMiddleware = async (req, res, next) => {
       })
     );
 
-    const decision = await client.protect(req);
+    const decision = await client.protect({
+      ...req,
+      ip:
+        req.ip ||
+        req.headers['x-forwarded-for']?.split(',')[0] ||
+        req.socket.remoteAddress,
+    });
 
     if (decision.isDenied() && decision.reason.isRateLimit()) {
       logger.warn('Rate limit exceeded', {
